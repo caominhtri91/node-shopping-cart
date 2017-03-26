@@ -1,16 +1,19 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var expressHbs = require('express-handlebars');
-var mongoose = require('mongoose');
-var session = require('express-session');
+const express = require('express');
+const path = require('path');
+const favicon = require('serve-favicon');
+const logger = require('morgan');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const expressHbs = require('express-handlebars');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const passport = require('passport');
+const flash = require('connect-flash');
 
-var index = require('./routes/index');
+const index = require('./routes/index');
+require('./config/passport');
 
-var app = express();
+const app = express();
 
 mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost:27017/shopping');
@@ -18,24 +21,27 @@ mongoose.connect('mongodb://localhost:27017/shopping');
 // view engine setup
 app.engine('.hbs', expressHbs({
   defaultLayout: 'layout',
-  extname: '.hbs'
+  extname: '.hbs',
 }));
 app.set('view engine', '.hbs');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+// app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(session({secret: 'mySecret', resave: false, saveUninitialized: false}));
+app.use(session({ secret: 'mySecret', resave: false, saveUninitialized: false }));
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  var err = new Error('Not Found');
+  const err = new Error('Not Found');
   err.status = 404;
   next(err);
 });

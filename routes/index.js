@@ -1,32 +1,41 @@
-var express = require('express');
-var router = express.Router();
-var Product = require('../models/product');
-var csrf = require('csurf');
+const express = require('express');
+const passport = require('passport');
 
-var csrfProtection = csrf();
+const Product = require('../models/product');
+const csrf = require('csurf');
+
+const router = express.Router();
+
+const csrfProtection = csrf();
 router.use(csrfProtection);
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', (req, res, next) => {
   Product.find().then((products) => {
-    var productChunks = [];
-    var chunkSize = 1;
+    const productChunks = [];
+    let chunkSize = 1;
     products.forEach((product) => {
-      if (chunkSize%3 === 0) {
+      if (chunkSize % 3 === 0) {
         productChunks.push(products.slice(chunkSize - 3, chunkSize));
       }
-      chunkSize++;
+      chunkSize += 1;
     });
-    res.render('shop/index', { title: 'Shopping cart', products: productChunks});
-  }).catch((err) => res.status(404).send());
+    res.render('shop/index', { title: 'Shopping cart', products: productChunks });
+  }).catch(err => res.status(404).send());
 });
 
-router.get('/user/signup', (req, res, next) => {
+router.get('/user/signup', (req, res) => {
   res.render('user/signup', { csrfToken: req.csrfToken() });
 });
 
-router.post('/user/signup', (req, res, next) => {
-  res.redirect('/');
+router.post('/user/signup', passport.authenticate('local.signup', {
+  successRedirect: 'profile',
+  failureRedirect: 'signup',
+  failureFlash: true,
+}));
+
+router.get('/user/profile', (req, res) => {
+  res.render('user/profile');
 });
 
 module.exports = router;
